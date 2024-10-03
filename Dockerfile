@@ -1,10 +1,16 @@
-# Etape 1 : Construction
-FROM golang:1.16-alpine
+FROM golang:1.20-alpine AS builder
+
 WORKDIR /app
-COPY app/ .
-RUN go mod init myapp
-RUN go env -w CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-RUN go build -o myapp .
-USER 1000
+
+COPY go.mod ./
+RUN go mod download
+COPY . .
+
+RUN go build -o my-go-app
+FROM alpine:latest
+
+COPY --from=builder /app/my-go-app /my-go-app
+
 EXPOSE 9090
-CMD ["./myapp"]
+
+CMD ["/my-go-app"]
